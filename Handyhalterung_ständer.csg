@@ -1,0 +1,228 @@
+// Bis zur gestrichenen Linie (-------) darfst du die Angaben auf dein Handy anpassen.
+// Bitte nur die kommentierten Variablen ändern.
+// Alle Angaben sind in [mm]
+
+
+handysize = [75,145,8]; //Masse des Handys [Breite,Länge,Tiefe]
+wall = 2; //dicke der Wände
+holders=[6,10,wall]; //Halterungen für Deckel der Box unten, aber auch damit Handy nicht rausfällt
+phi = 0.1; //um rundungsfehler zu umgehen NICHT ÄNDERN, NICHT AUF 0 SETZEN
+
+//Für USB Plug
+USBradius = handysize[2]/3; //Halbe Höhe des USB Plugs
+USBwidth = 15; //Breite der Ausparung
+USBfromleft = 5; //Abstand von unterer linken inneren Ecke
+USB = [USBradius, USBwidth, USBfromleft];
+
+
+//Wenn du rechts die Ausparung nicht brauchst mache hier false
+//Die Ausparung wird zentriert sein und abgeflacht
+r = true;
+rfromtop = 20;  //Abstand vom oberen Rand des Handys bis zu dem 1. Knopf
+rlength = 44; //Abstand von Beginn des ersten Knopfes bis Ende vom letzten
+rr1 = (handysize[2]+wall)/2;
+rr2 = handysize[2]/3;
+Right = [rfromtop, rlength, rr1, rr2];
+
+
+//Wenn du links eine Ausparung brauchst mache hier true
+//Die Ausparung wird zentriert sein und abgeflacht
+l = false;
+lfromtop=20; //Abstand vom oberen Rand des Handys bis zu dem 1. Knopf
+llength = 50; //Abstand von Beginn des ersten Knopfes bis Ende vom letzten
+lr1 = (handysize[2]+wall)/2; 
+lr2 = handysize[2]/3;
+Left = [lfromtop, llength, lr1, lr2];
+
+stromdirekt=false; //Wählen ob Aussparung für Kabeldurchgang oder für 230V Anschluss
+offn = [20,10]; //Grösse der Öffnung fals false gewählt wird. [x,z]
+
+Camfromtop = 4; //Position der Kamera von oben (immer bezüglich des Handys)
+Camfromright = 6; //Position der Kamera von rechts
+Camwidth = 20; //Breite der Kamera (mit Blitz usw.)
+Camheight = 10; //Höhe der Kamera
+Cam = [Camfromtop, Camfromright, Camwidth, Camheight];
+
+Winkel = 65; //Winkel in welchem das Handy stehen soll
+
+Hy = cos(Winkel)*(handysize[2]+2*wall);
+
+Hx1 = cos(Winkel)*(handysize[1]+wall);
+Hx2 = sin(Winkel)*(handysize[2]+2*wall);
+Hx3 = 10;
+
+Boxheight = 30+Hy; //Höhe der Box unten
+Boxlength = 20+Hx1+Hx2+Hx3; //Länge der Box unten
+Boxwidth = handysize[0]+2*wall;
+Box = [Boxwidth, Boxlength, Boxheight];
+
+
+stuetzen=[15,10,wall]; //Grösse der Stützen [x,y,z]
+
+
+//--------------------------------------------------------------------------------
+
+
+nachvorne = Box[1]-Hx1-Hx2-Hx3;
+
+translate([0,-nachvorne,0]) { //Box
+    difference() { //Rohbox
+        cube(Box);
+        translate([wall,wall,wall]) {
+            cube([Box[0]-2*wall, Box[1]-2*wall, Box[2]-wall+phi]);
+        }
+        //Rohbox Ende
+        
+        if(stromdirekt) {   //Steckeraussparung
+        translate([wall+10,-phi,wall+6]) { 
+            union() {
+                cube([23,wall+2*phi,14]);
+                translate([-14/2,0,14/2]){
+                    rotate([0,45,0]){
+                        cube([sqrt(2)*14/2,wall+2*phi,sqrt(2)*14/2]);
+                    }
+                }
+                translate([23-14/2,0,14/2]){
+                    rotate([0,45,0]){
+                        cube([sqrt(2)*14/2,wall+2*phi,sqrt(2)*14/2]);
+                    }
+                }
+            }
+        }
+        }
+        else {
+            translate([2*wall,-phi,2*wall]) {
+                cube([offn[0],wall+2*phi,offn[1]]);
+            }
+        }
+        //Steckeraussparung Ende
+    }
+    translate([wall,wall,Box[2]-2*wall]) {cube(holders);}; //Holders
+    translate([Box[0]-wall-holders[0],wall,Box[2]-2*wall]) {cube(holders);};
+    translate([wall,Hx1+nachvorne-holders[1],Box[2]-2*wall]) {cube(holders);};
+    translate([Box[0]-wall-holders[0],Hx1+nachvorne-holders[1],Box[2]-2*wall]) {cube(holders);};
+    //Holders Ende
+    translate([Box[0]+stuetzen[0]+3*wall, 0, 0]) { //Deckel
+        cube([handysize[0], nachvorne+Hx1-3*wall,wall]);
+    }
+    
+        //Stützen
+    translate([-stuetzen[0],Box[1]/4-stuetzen[1]/2,0]) { cube(stuetzen); }
+    translate([-stuetzen[0],Box[1]*3/4-stuetzen[1]/2,0]) { cube(stuetzen); }
+    translate([Box[0],Box[1]/4-stuetzen[1]/2,0]) { cube(stuetzen); }
+    translate([Box[0],Box[1]*3/4-stuetzen[1]/2,0]) { cube(stuetzen); }
+  
+    
+}
+
+    translate([0, Hx1+Hx2-cos(Winkel)*wall, Box[2]]) { //hintere Abdeckung
+        cube([handysize[0]+2*wall, 10 + cos(Winkel)*wall, sin(Winkel)*wall]);
+    }
+
+
+    
+    
+translate([0,0,30+sin(Winkel)*(handysize[1]+wall)]) {
+    rotate([-Winkel,0,0]){
+        difference(){
+            cube([handysize[0]+2*wall,handysize[1]+wall,handysize[2]+2*wall]);
+            
+            translate([wall,-phi,wall]) { //Innenraum
+                cube([handysize[0],handysize[1]+phi,handysize[2]+phi+wall]);
+            }
+            
+            union () { //USB-Öffnung
+                translate([handysize[0]-USB[1]+USB[0]+wall-USB[2],handysize[1]-phi,handysize[2]/2+wall]){ //rechte Rundung
+                    rotate([-90,0,0]){
+                        cylinder(r=USB[0],h=wall+2*phi);
+                    }
+                }
+                translate([handysize[0]+wall-USB[1]+USB[0]-USB[2],handysize[1]-phi,handysize[2]/2-USB[0]+wall]){ //Mittelteil
+                        cube([15-2*USB[0],wall+2*phi,USB[0]*2]);
+                }
+                translate([handysize[0]-USB[0]+wall-USB[2],handysize[1]-phi,handysize[2]/2+wall]){ //linke Rundung
+                    rotate([-90,0,0]){
+                        cylinder(r=USB[0],h=wall+2*phi);
+                    }
+                }
+            }
+            //USB-Öffnung Ende
+            
+        if(r) { //Lautstärke
+            union() { 
+                translate([-phi,Right[0],handysize[2]/2+wall]) {
+                    rotate([0,90,0]) {
+                        cylinder(r1=Right[2],r2=Right[3],h=wall+2*phi);
+                    }
+                }
+                translate([-phi,Right[0]+Right[1],handysize[2]/2+wall]) {
+                    rotate([0,90,0]) {
+                        cylinder(r1=Right[2],r2=Right[3],h=wall+2*phi);
+                    }
+                }
+                translate([-phi,Right[0]+Right[1]/2,Right[2]+(handysize[2]+2*wall)/2-Right[2]]){
+                    rotate([0,90,0]) {
+                        linear_extrude(height = wall+2*phi, center=false, scale = [Right[3]/Right[2],1])
+                            square([Right[2]*2,Right[1]],center=true);
+                    }
+                }
+
+
+            }
+        }
+        //Lautstärket Ende
+        if(l) { //Left
+            union() { 
+                translate([phi+2*wall+handysize[0],Left[0],handysize[2]/2+wall]) {
+                    rotate([0,-90,0]) {
+                        cylinder(r1=Left[2],r2=Left[3],h=wall+2*phi);
+                    }
+                }
+                translate([phi+2*wall+handysize[0],Left[0]+Left[1],handysize[2]/2+wall]) {
+                    rotate([0,-90,0]) {
+                        cylinder(r1=Left[2],r2=Left[3],h=wall+2*phi);
+                    }
+                }
+                translate([phi+2*wall+handysize[0],Left[0]+Left[1]/2,Left[2]+(handysize[2]+2*wall)/2-Left[2]]){
+                    rotate([0,-90,0]) {
+                        linear_extrude(height = wall+2*phi, center=false, scale = [Left[3]/Left[2],1])
+                            square([Left[2]*2,Left[1]],center=true);
+                    }       
+                }
+
+
+            }
+        }
+        //Left Ende
+            
+            union() { //Kamera
+                translate([Cam[1], Cam[0],-phi]) {
+                    cube([Cam[2],Cam[3],wall+2*phi]);
+                }
+            }
+            //Kamera Ende
+          
+        }
+
+
+
+
+    //Plätchen damit Handy nicht rausfällt
+    translate([wall,handysize[1]*2/3,handysize[2]+wall]) {
+        cube(holders);
+    }
+    translate([handysize[0]+wall-holders[0],handysize[1]*2/3,handysize[2]+wall]) {
+        cube(holders);
+    }
+    translate([wall,0,handysize[2]+wall]) {
+        cube(holders);
+    }
+    translate([handysize[0]+wall-holders[0],0,handysize[2]+wall]) {
+        cube(holders);
+    }
+    //fertig Plätchen
+    }
+
+//feritg rotate
+}
+
